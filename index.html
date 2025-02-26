@@ -51,20 +51,45 @@
         // Will hold all countdown objects
         let countdowns = [];
 
-        // Create a new countdown card element and its corresponding object
+        // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
+            // Object to keep track of remaining time, interval, and name
+            const countdownObj = { id: id, remaining: 0, interval: null, name: "" };
+
             // Container for a single countdown
             const card = document.createElement('div');
             card.className = 'countdown';
             card.id = `cd-${id}`;
             
-            // Display element
+            // Name display element (initially empty)
+            const nameDisplay = document.createElement('h2');
+            nameDisplay.className = 'countdown-name';
+            nameDisplay.textContent = "";
+            card.appendChild(nameDisplay);
+            
+            // Name input and Set Name button
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.placeholder = 'Countdown Name';
+            nameInput.id = `name-${id}`;
+            card.appendChild(nameInput);
+
+            const setNameBtn = document.createElement('button');
+            setNameBtn.textContent = 'Set Name';
+            setNameBtn.onclick = function(){
+                const name = nameInput.value.trim();
+                countdownObj.name = name;
+                nameDisplay.textContent = name;
+            };
+            card.appendChild(setNameBtn);
+
+            // Display element for the remaining time
             const display = document.createElement('p');
             display.id = `time-${id}`;
             display.textContent = "0m 0s";
             card.appendChild(display);
             
-            // Container for inputs
+            // Container for timer inputs (minutes and seconds)
             const inputContainer = document.createElement('div');
             inputContainer.className = 'inputs';
             
@@ -104,7 +129,7 @@
             const startBtn = document.createElement('button');
             startBtn.textContent = 'Start';
             startBtn.onclick = function(){
-                // Avoid starting if already running or nothing was set
+                // Avoid starting if already running or if no time is set
                 if(countdownObj.interval || countdownObj.remaining <= 0) return;
                 countdownObj.interval = setInterval(function(){
                     if(countdownObj.remaining > 0) {
@@ -142,9 +167,6 @@
             };
             card.appendChild(deleteBtn);
             
-            // Object to keep track of remaining time and interval
-            const countdownObj = { id: id, remaining: 0, interval: null };
-
             return { card, countdownObj };
         }
 
