@@ -21,15 +21,63 @@
             text-align: center;
             margin-top: 30px;
         }
+
+        /* Hide timer inputs and name field by default */
+        .inputs,
+        input[type="text"] {
+            display: none;
+        }
+
+        /* Highlight the remaining time display */
+        .countdown p {
+            font-size: 2em;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        /* Reveal inputs when hovering over the countdown card */
+        .countdown:hover .inputs,
+        .countdown:hover input[type="text"] {
+            display: inline-block;
+        }
+        /* Import the Mukta Maalar Bold font */
+        @import url('https://fonts.googleapis.com/css2?family=Mukta+Maalar:wght@700&display=swap');
+
+        /* Apply Mukta Maalar Bold font to the entire page */
+        html, body, h1, h2, p, input, button {
+            font-family: 'Mukta Maalar', sans-serif;
+            font-weight: 700;
+        }
+
         .countdown {
             border: 1px solid #ccc;
-            padding: 15px;
+            padding: 20px;
             margin-top: 10px;
-            border-radius: 5px;
-            position: relative;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            transition: transform 0.2s;
         }
+
+        .countdown:hover {
+            transform: scale(1.02);
+        }
+
         .countdown button {
             margin-right: 5px;
+            border: none;
+            color: #000;
+            background: #F65555;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .countdown button:hover {
+            background: linear-gradient(145deg, #F65555, #FCCF31);
         }
         .inputs input {
             margin-right: 5px;
