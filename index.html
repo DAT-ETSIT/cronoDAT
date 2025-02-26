@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Debate Electoral 2025</title>
+    <link rel="shortcut icon" href="https://dat.etsit.upm.es/wp-content/uploads/assets_web/cropped-favicon_dat-1-300x300.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -194,6 +195,109 @@
             }
         });
 
+        // Add global keyboard event listener to start/stop timers with assigned keys
+        document.addEventListener('keydown', function(event) {
+            countdowns.forEach(c => {
+            if (c.countdownObj.key && event.key.toLowerCase() === c.countdownObj.key.toLowerCase()) {
+                if (c.countdownObj.interval) {
+                // Stop the timer if running
+                clearInterval(c.countdownObj.interval);
+                c.countdownObj.interval = null;
+                document.getElementById(`status-${c.countdownObj.id}`).textContent = '⏸️';
+                } else if (c.countdownObj.remaining > 0) {
+                // Start the timer if not running
+                c.countdownObj.interval = setInterval(function() {
+                    if (c.countdownObj.remaining > 0) {
+                    c.countdownObj.remaining--;
+                    updateDisplay(c.countdownObj.id);
+                    } else {
+                    clearInterval(c.countdownObj.interval);
+                    c.countdownObj.interval = null;
+                    updateDisplay(c.countdownObj.id);
+                    }
+                    document.getElementById(`status-${c.countdownObj.id}`).textContent = '▶️';
+                }, 1000);
+                }
+                saveCountdowns(); // Save state when timer is toggled
+            }
+            });
+        });
+
+        // Update save function to include the key
+        function saveCountdowns() {
+            const data = countdowns.map(c => ({
+            id: c.countdownObj.id,
+            name: c.countdownObj.name,
+            remaining: c.countdownObj.remaining,
+            key: c.countdownObj.key
+            }));
+            localStorage.setItem('countdowns', JSON.stringify(data));
+        }
+
+        function loadCountdowns() {
+            // Load page title
+            const savedTitle = localStorage.getItem('pageTitle') || "Cronómetro múltiple";
+            document.title = savedTitle;
+            const h1Element = document.querySelector('h1');
+            h1Element.textContent = savedTitle;
+            
+            const data = JSON.parse(localStorage.getItem('countdowns'));
+            if (data && Array.isArray(data)) {
+            data.forEach(item => {
+                const { card, countdownObj } = createCountdownCard(item.id);
+                countdownObj.name = item.name;
+                countdownObj.remaining = item.remaining;
+                countdownObj.key = item.key; // Load the key
+                
+                // Update key button text if key exists
+                const keyBtn = card.querySelector(`.key-btn-${item.id}`);
+                if (keyBtn && item.key) {
+                keyBtn.textContent = `Key: ${item.key.toUpperCase()}`;
+                }
+                
+                // Append the card to the container so it is visible
+                document.getElementById('countdownsContainer').appendChild(card);
+                
+                // Update UI elements
+                card.querySelector('.countdown-name').textContent = item.name || "Click to name";
+                card.querySelector(`#time-${item.id}`).textContent = 
+                `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
+                
+                countdowns.push({ countdownObj });
+            });
+            }
+        }
+        // Add a key assignment button to each countdown card
+        function addKeyAssignmentButton(card, countdownObj) {
+            const keyBtn = document.createElement('button');
+            keyBtn.textContent = countdownObj.key ? `Key: ${countdownObj.key.toUpperCase()}` : 'Assign Key';
+            keyBtn.className = `key-btn-${countdownObj.id}`;
+            
+            keyBtn.addEventListener('click', function() {
+                keyBtn.textContent = 'Press any key...';
+                
+                // Create one-time event listener for the next keypress
+                const keyHandler = function(e) {
+                    // Prevent assigning keys that might interfere with browser functions
+                    if (['Tab', 'Escape', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        keyBtn.textContent = countdownObj.key ? `Key: ${countdownObj.key.toUpperCase()}` : 'Assign Key';
+                        document.removeEventListener('keydown', keyHandler);
+                        return;
+                    }
+                    
+                    // Assign the pressed key
+                    countdownObj.key = e.key;
+                    keyBtn.textContent = `Key: ${e.key.toUpperCase()}`;
+                    document.removeEventListener('keydown', keyHandler);
+                    saveCountdowns();
+                };
+                
+                document.addEventListener('keydown', keyHandler);
+            });
+            
+            card.appendChild(keyBtn);
+        }
+
         // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
             // Object to keep track of remaining time, interval, and name
@@ -310,8 +414,6 @@
             displayWrapper.appendChild(display);
             card.appendChild(displayWrapper);
 
-
-
             // Start button
             const startBtn = document.createElement('button');
             startBtn.textContent = 'Start';
@@ -341,7 +443,44 @@
                 }
             };
             card.appendChild(stopBtn);
-            
+
+            // Add status indicator
+            const statusIndicator = document.createElement('span');
+            statusIndicator.id = `status-${id}`;
+            statusIndicator.className = 'timer-status';
+            statusIndicator.innerHTML = '⏸️'; // Pause symbol for stopped timer
+            statusIndicator.style.fontSize = '24px';
+            statusIndicator.style.margin = '0 10px';
+            statusIndicator.style.verticalAlign = 'middle';
+            card.insertBefore(statusIndicator, startBtn);
+
+            // Update start button to change status indicator
+            startBtn.onclick = function(){
+                // Avoid starting if already running or if no time is set
+                if(countdownObj.interval || countdownObj.remaining <= 0) return;
+                countdownObj.interval = setInterval(function(){
+                    if(countdownObj.remaining > 0) {
+                        countdownObj.remaining--;
+                        updateDisplay(id);
+                    } else {
+                        clearInterval(countdownObj.interval);
+                        countdownObj.interval = null;
+                        updateDisplay(id);
+                        statusIndicator.innerHTML = '⏸️'; // Update to pause icon when timer completes
+                    }
+                }, 1000);
+                statusIndicator.innerHTML = '▶️'; // Update to play icon when timer starts
+            };
+
+            // Update stop button to change status indicator
+            stopBtn.onclick = function(){
+                if(countdownObj.interval) {
+                    clearInterval(countdownObj.interval);
+                    countdownObj.interval = null;
+                    statusIndicator.innerHTML = '⏸️'; // Update to pause icon when timer stops
+                }
+            };
+
             // Reset button
             const resetBtn = document.createElement('button');
             resetBtn.textContent = 'Reset';
@@ -364,6 +503,8 @@
                 countdowns = countdowns.filter(c => c.countdownObj.id !== id);
             };
             card.appendChild(deleteBtn);
+
+            addKeyAssignmentButton(card, countdownObj); // Add key assignment button
             
             // Set the name display after creating the object
             nameDisplay.textContent = countdownObj.name || "Click to name";
