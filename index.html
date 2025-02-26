@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Debate Electoral 2025</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mukta+Malar:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,13 +43,10 @@
         .countdown h2 {
             cursor: pointer; /* Show it's clickable */
         }
-
-        /* Import the Mukta Maalar Bold font */
-        @import url('https://fonts.googleapis.com/css2?family=Mukta+Maalar:wght@700&display=swap');
-
+        
         /* Apply Mukta Maalar Bold font to the entire page */
-        html, body, h1, h2, p, input, button {
-            font-family: 'Mukta Maalar', sans-serif;
+        * {
+            font-family: 'Mukta Maalar', sans-serif !important;
             font-weight: 700;
         }
 
@@ -94,7 +94,7 @@
     </style>
 </head>
 <body>
-    <header></header>
+    <header>
         <img src="https://dat.etsit.upm.es/wp-content/uploads/assets_web/logo_dat_web.svg" alt="Header Image">
     </header>
     <h1>Debate Electoral 2025</h1>
@@ -126,7 +126,7 @@
                 document.getElementById('countdownsContainer').appendChild(card);
                 
                 // Update UI elements accordingly using the card element
-                card.querySelector('.countdown-name').textContent = item.name;
+                card.querySelector('.countdown-name').textContent = item.name || "Click to name";
                 card.querySelector(`#time-${item.id}`).textContent = `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
                 
                 countdowns.push({ countdownObj });
@@ -150,7 +150,7 @@
             // Name display element (initially empty) - clickable to edit
             const nameDisplay = document.createElement('h2');
             nameDisplay.className = 'countdown-name';
-            nameDisplay.textContent = "Click to name";
+            nameDisplay.textContent = "Click to name"; // Default placeholder
             nameDisplay.addEventListener('click', function() {
                 // Create input to replace h2
                 const nameInput = document.createElement('input');
@@ -174,7 +174,7 @@
                 function saveNameChange() {
                     const name = nameInput.value.trim();
                     countdownObj.name = name;
-                    nameDisplay.textContent = name || "Click to name";
+                    nameDisplay.textContent = name || "Click to name"; // Always use placeholder if name is empty
                     card.replaceChild(nameDisplay, nameInput);
                 }
             });
@@ -293,6 +293,9 @@
                 countdowns = countdowns.filter(c => c.countdownObj.id !== id);
             };
             card.appendChild(deleteBtn);
+            
+            // Set the name display after creating the object
+            nameDisplay.textContent = countdownObj.name || "Click to name";
             
             return { card, countdownObj };
         }
