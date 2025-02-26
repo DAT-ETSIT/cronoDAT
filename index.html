@@ -91,6 +91,16 @@
             padding: 5px;
             margin: 10px 0;
         }
+
+         /* Add this to your existing CSS */
+        .time-input {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            width: 80px; /* Fixed width to fit 3 digits */
+            padding: 5px;
+            margin: 10px 5px;
+        }
     </style>
 </head>
 <body>
@@ -223,6 +233,13 @@
             });
             card.appendChild(nameDisplay);
             
+            // Create a container div to center-justify content
+            const displayWrapper = document.createElement('div');
+            displayWrapper.style.display = 'flex';
+            displayWrapper.style.justifyContent = 'center';
+            displayWrapper.style.alignItems = 'center';
+            displayWrapper.style.flexDirection = 'column';
+            
             // Display element for the remaining time
             const display = document.createElement('p');
             display.id = `time-${id}`;
@@ -230,12 +247,16 @@
             display.addEventListener('click', function() {
                 // Create container for inputs
                 const timeEditContainer = document.createElement('div');
+                timeEditContainer.style.display = 'flex';
+                timeEditContainer.style.justifyContent = 'center';
+                timeEditContainer.style.alignItems = 'center';
+                timeEditContainer.style.flexWrap = 'wrap';
                 
                 // Minutes input
                 const minutesInput = document.createElement('input');
                 minutesInput.type = 'number';
                 minutesInput.min = 0;
-                minutesInput.className = 'edit-input';
+                minutesInput.className = 'time-input';
                 minutesInput.value = Math.floor(countdownObj.remaining / 60);
                 minutesInput.placeholder = 'Minutes';
                 timeEditContainer.appendChild(minutesInput);
@@ -245,7 +266,7 @@
                 secondsInput.type = 'number';
                 secondsInput.min = 0;
                 secondsInput.max = 59;
-                secondsInput.className = 'edit-input';
+                secondsInput.className = 'time-input';
                 secondsInput.value = countdownObj.remaining % 60;
                 secondsInput.placeholder = 'Seconds';
                 timeEditContainer.appendChild(secondsInput);
@@ -256,8 +277,8 @@
                 saveButton.addEventListener('click', saveTimeChange);
                 timeEditContainer.appendChild(saveButton);
                 
-                // Replace display with inputs
-                card.replaceChild(timeEditContainer, display);
+                // Replace display with inputs inside the wrapper
+                displayWrapper.replaceChild(timeEditContainer, display);
                 minutesInput.focus();
                 
                 // Add event listeners for Enter key
@@ -277,12 +298,15 @@
                     const minutes = parseInt(minutesInput.value) || 0;
                     const seconds = parseInt(secondsInput.value) || 0;
                     countdownObj.remaining = minutes * 60 + seconds;
-                    card.replaceChild(display, timeEditContainer);
+                    displayWrapper.replaceChild(display, timeEditContainer);
                     updateDisplay(id);
                     saveCountdowns(); // Save changes to localStorage immediately
                 }
             });
-            card.appendChild(display);
+            displayWrapper.appendChild(display);
+            card.appendChild(displayWrapper);
+
+
 
             // Start button
             const startBtn = document.createElement('button');
