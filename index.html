@@ -240,7 +240,7 @@
                 }
             });
             card.appendChild(display);
-            
+
             // Start button
             const startBtn = document.createElement('button');
             startBtn.textContent = 'Start';
@@ -259,6 +259,17 @@
                 }, 1000);
             };
             card.appendChild(startBtn);
+
+            // Stop button
+            const stopBtn = document.createElement('button');
+            stopBtn.textContent = 'Stop';
+            stopBtn.onclick = function(){
+                if(countdownObj.interval) {
+                    clearInterval(countdownObj.interval);
+                    countdownObj.interval = null;
+                }
+            };
+            card.appendChild(stopBtn);
             
             // Reset button
             const resetBtn = document.createElement('button');
