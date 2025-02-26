@@ -48,8 +48,39 @@
     <div id="countdownsContainer"></div>
 
     <script>
-        // Will hold all countdown objects
+        // Will hold all countdown objects and persist them in local storage
+        function saveCountdowns() {
+            const data = countdowns.map(c => ({
+            id: c.countdownObj.id,
+            name: c.countdownObj.name,
+            remaining: c.countdownObj.remaining
+            }));
+            localStorage.setItem('countdowns', JSON.stringify(data));
+        }
+        
+        function loadCountdowns() {
+            const data = JSON.parse(localStorage.getItem('countdowns'));
+            if (data && Array.isArray(data)) {
+            data.forEach(item => {
+                const { card, countdownObj } = createCountdownCard(item.id);
+                countdownObj.name = item.name;
+                countdownObj.remaining = item.remaining;
+                
+                // Append the card to the container so it is visible
+                document.getElementById('countdownsContainer').appendChild(card);
+                
+                // Update UI elements accordingly using the card element
+                card.querySelector('.countdown-name').textContent = item.name;
+                card.querySelector(`#time-${item.id}`).textContent = `${Math.floor(item.remaining / 60)}m ${item.remaining % 60}s`;
+                card.querySelector(`#name-${item.id}`).value = item.name;
+                
+                countdowns.push({ countdownObj });
+            });
+            }
+        }
+
         let countdowns = [];
+        loadCountdowns();
 
         // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
@@ -188,6 +219,8 @@
             countdowns.push({ countdownObj });
             document.getElementById('countdownsContainer').appendChild(card);
         });
+
+        window.addEventListener('beforeunload', saveCountdowns);
     </script>
 </body>
 </html>
