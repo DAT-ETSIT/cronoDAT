@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Independent Countdown Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        header img {
+            max-width: 200px;
+        }
+        h1 {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .countdown {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            position: relative;
+        }
+        .countdown button {
+            margin-right: 5px;
+        }
+        .inputs input {
+            margin-right: 5px;
+            width: 70px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://dat.etsit.upm.es/wp-content/uploads/assets_web/logo_dat_web.svg" alt="Header Image">
+    </header>
+    <h1>Debate Electoral 2025</h1>
+    
+    <!-- Button to add a new countdown card -->
+    <button id="addCountdownBtn">Add Countdown</button>
+    <div id="countdownsContainer"></div>
+
+    <script>
+        // Will hold all countdown objects
+        let countdowns = [];
+
+        // Create a new countdown card element and its corresponding object
+        function createCountdownCard(id) {
+            // Container for a single countdown
+            const card = document.createElement('div');
+            card.className = 'countdown';
+            card.id = `cd-${id}`;
+            
+            // Display element
+            const display = document.createElement('p');
+            display.id = `time-${id}`;
+            display.textContent = "0m 0s";
+            card.appendChild(display);
+            
+            // Container for inputs
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'inputs';
+            
+            // Minutes input
+            const minutesInput = document.createElement('input');
+            minutesInput.type = 'number';
+            minutesInput.min = 0;
+            minutesInput.placeholder = 'Minutes';
+            minutesInput.id = `min-${id}`;
+            inputContainer.appendChild(minutesInput);
+            
+            // Seconds input
+            const secondsInput = document.createElement('input');
+            secondsInput.type = 'number';
+            secondsInput.min = 0;
+            secondsInput.max = 59;
+            secondsInput.placeholder = 'Seconds';
+            secondsInput.id = `sec-${id}`;
+            inputContainer.appendChild(secondsInput);
+
+            card.appendChild(inputContainer);
+            
+            // Set Timer button
+            const setBtn = document.createElement('button');
+            setBtn.textContent = 'Set Timer';
+            setBtn.onclick = function(){
+                // Get values from inputs (default to 0 if blank)
+                const minutes = parseInt(minutesInput.value) || 0;
+                const seconds = parseInt(secondsInput.value) || 0;
+                const totalSeconds = minutes * 60 + seconds;
+                countdownObj.remaining = totalSeconds;
+                updateDisplay(id);
+            };
+            card.appendChild(setBtn);
+            
+            // Start button
+            const startBtn = document.createElement('button');
+            startBtn.textContent = 'Start';
+            startBtn.onclick = function(){
+                // Avoid starting if already running or nothing was set
+                if(countdownObj.interval || countdownObj.remaining <= 0) return;
+                countdownObj.interval = setInterval(function(){
+                    if(countdownObj.remaining > 0) {
+                        countdownObj.remaining--;
+                        updateDisplay(id);
+                    } else {
+                        clearInterval(countdownObj.interval);
+                        countdownObj.interval = null;
+                        updateDisplay(id);
+                    }
+                }, 1000);
+            };
+            card.appendChild(startBtn);
+            
+            // Reset button
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = 'Reset';
+            resetBtn.onclick = function(){
+                clearInterval(countdownObj.interval);
+                countdownObj.interval = null;
+                countdownObj.remaining = 0;
+                updateDisplay(id);
+            };
+            card.appendChild(resetBtn);
+            
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = function(){
+                clearInterval(countdownObj.interval);
+                // Remove from DOM
+                card.remove();
+                // Remove from countdowns array
+                countdowns = countdowns.filter(c => c.countdownObj.id !== id);
+            };
+            card.appendChild(deleteBtn);
+            
+            // Object to keep track of remaining time and interval
+            const countdownObj = { id: id, remaining: 0, interval: null };
+
+            return { card, countdownObj };
+        }
+
+        // Update the displayed time for a given countdown id
+        function updateDisplay(id) {
+            const obj = countdowns.find(c => c.countdownObj.id === id);
+            if (obj) {
+                const display = document.getElementById(`time-${id}`);
+                const mins = Math.floor(obj.countdownObj.remaining / 60);
+                const secs = obj.countdownObj.remaining % 60;
+                display.textContent = `${mins}m ${secs}s`;
+            }
+        }
+
+        // Add a new countdown card when the button is clicked
+        document.getElementById('addCountdownBtn').addEventListener('click', function(){
+            const id = Date.now();
+            const { card, countdownObj } = createCountdownCard(id);
+            countdowns.push({ countdownObj });
+            document.getElementById('countdownsContainer').appendChild(card);
+        });
+    </script>
+</body>
+</html>
