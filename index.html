@@ -114,7 +114,17 @@
             localStorage.setItem('countdowns', JSON.stringify(data));
         }
         
+        function saveTitle(title) {
+            localStorage.setItem('pageTitle', title);
+        }
+        
         function loadCountdowns() {
+            // Load page title
+            const savedTitle = localStorage.getItem('pageTitle') || "Cronómetro múltiple";
+            document.title = savedTitle;
+            const h1Element = document.querySelector('h1');
+            h1Element.textContent = savedTitle;
+            
             const data = JSON.parse(localStorage.getItem('countdowns'));
             if (data && Array.isArray(data)) {
             data.forEach(item => {
@@ -136,6 +146,39 @@
 
         let countdowns = [];
         loadCountdowns();
+
+        // Make title editable
+        document.querySelector('h1').addEventListener('click', function() {
+            const h1Element = this;
+            const currentTitle = h1Element.textContent;
+            
+            // Create input to replace h1
+            const titleInput = document.createElement('input');
+            titleInput.type = 'text';
+            titleInput.className = 'edit-input';
+            titleInput.value = currentTitle;
+            titleInput.placeholder = 'Page Title';
+            
+            // Replace h1 with input
+            h1Element.parentNode.replaceChild(titleInput, h1Element);
+            titleInput.focus();
+            
+            // Handle saving on blur and pressing Enter
+            titleInput.addEventListener('blur', saveTitleChange);
+            titleInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    saveTitleChange();
+                }
+            });
+            
+            function saveTitleChange() {
+                const newTitle = titleInput.value.trim() || "Cronómetro múltiple";
+                h1Element.textContent = newTitle;
+                document.title = newTitle;
+                titleInput.parentNode.replaceChild(h1Element, titleInput);
+                saveTitle(newTitle);
+            }
+        });
 
         // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
@@ -183,7 +226,7 @@
             // Display element for the remaining time
             const display = document.createElement('p');
             display.id = `time-${id}`;
-            display.textContent = "0m 0s";
+            display.textContent = "00:00";
             display.addEventListener('click', function() {
                 // Create container for inputs
                 const timeEditContainer = document.createElement('div');
@@ -309,7 +352,6 @@
                 display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
         }
-
 
         // Add a new countdown card when the button is clicked
         document.getElementById('addCountdownBtn').addEventListener('click', function(){
