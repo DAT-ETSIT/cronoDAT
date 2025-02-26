@@ -346,7 +346,7 @@
             displayWrapper.style.display = 'flex';
             displayWrapper.style.justifyContent = 'center';
             displayWrapper.style.alignItems = 'center';
-            displayWrapper.style.flexDirection = 'column';
+            displayWrapper.style.flexDirection = 'row';
             
             // Display element for the remaining time
             const display = document.createElement('p');
@@ -359,7 +359,7 @@
                 timeEditContainer.style.justifyContent = 'center';
                 timeEditContainer.style.alignItems = 'center';
                 timeEditContainer.style.flexWrap = 'wrap';
-                
+
                 // Minutes input
                 const minutesInput = document.createElement('input');
                 minutesInput.type = 'number';
@@ -412,6 +412,17 @@
                 }
             });
             displayWrapper.appendChild(display);
+
+            // Add status indicator
+            const statusIndicator = document.createElement('span');
+            statusIndicator.id = `status-${id}`;
+            statusIndicator.className = 'timer-status';
+            statusIndicator.innerHTML = '⏸️'; // Pause symbol for stopped timer
+            statusIndicator.style.fontSize = '24px';
+            statusIndicator.style.margin = '0 10px';
+            statusIndicator.style.verticalAlign = 'middle';
+            displayWrapper.appendChild(statusIndicator);
+
             card.appendChild(displayWrapper);
 
             // Start button
@@ -444,15 +455,7 @@
             };
             card.appendChild(stopBtn);
 
-            // Add status indicator
-            const statusIndicator = document.createElement('span');
-            statusIndicator.id = `status-${id}`;
-            statusIndicator.className = 'timer-status';
-            statusIndicator.innerHTML = '⏸️'; // Pause symbol for stopped timer
-            statusIndicator.style.fontSize = '24px';
-            statusIndicator.style.margin = '0 10px';
-            statusIndicator.style.verticalAlign = 'middle';
-            card.insertBefore(statusIndicator, startBtn);
+            
 
             // Update start button to change status indicator
             startBtn.onclick = function(){
