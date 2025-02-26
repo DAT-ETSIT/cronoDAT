@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Independent Countdown Tracker</title>
+    <title>Debate Electoral 2025</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,9 +22,8 @@
             margin-top: 30px;
         }
 
-        /* Hide timer inputs and name field by default */
-        .inputs,
-        input[type="text"] {
+        /* Remove hover display logic */
+        .inputs {
             display: none;
         }
 
@@ -35,13 +34,13 @@
             color: #000;
             text-align: center;
             margin: 20px 0;
+            cursor: pointer; /* Show it's clickable */
+        }
+        
+        .countdown h2 {
+            cursor: pointer; /* Show it's clickable */
         }
 
-        /* Reveal inputs when hovering over the countdown card */
-        .countdown:hover .inputs,
-        .countdown:hover input[type="text"] {
-            display: inline-block;
-        }
         /* Import the Mukta Maalar Bold font */
         @import url('https://fonts.googleapis.com/css2?family=Mukta+Maalar:wght@700&display=swap');
 
@@ -83,10 +82,19 @@
             margin-right: 5px;
             width: 70px;
         }
+        
+        .edit-input {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            width: 80%;
+            padding: 5px;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <header>
+    <header></header>
         <img src="https://dat.etsit.upm.es/wp-content/uploads/assets_web/logo_dat_web.svg" alt="Header Image">
     </header>
     <h1>Debate Electoral 2025</h1>
@@ -119,8 +127,7 @@
                 
                 // Update UI elements accordingly using the card element
                 card.querySelector('.countdown-name').textContent = item.name;
-                card.querySelector(`#time-${item.id}`).textContent = `${Math.floor(item.remaining / 60)}m ${item.remaining % 60}s`;
-                card.querySelector(`#name-${item.id}`).value = item.name;
+                card.querySelector(`#time-${item.id}`).textContent = `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
                 
                 countdowns.push({ countdownObj });
             });
@@ -140,69 +147,99 @@
             card.className = 'countdown';
             card.id = `cd-${id}`;
             
-            // Name display element (initially empty)
+            // Name display element (initially empty) - clickable to edit
             const nameDisplay = document.createElement('h2');
             nameDisplay.className = 'countdown-name';
-            nameDisplay.textContent = "";
+            nameDisplay.textContent = "Click to name";
+            nameDisplay.addEventListener('click', function() {
+                // Create input to replace h2
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.className = 'edit-input';
+                nameInput.value = countdownObj.name || '';
+                nameInput.placeholder = 'Countdown Name';
+                
+                // Replace h2 with input
+                card.replaceChild(nameInput, nameDisplay);
+                nameInput.focus();
+                
+                // Handle saving on blur and pressing Enter
+                nameInput.addEventListener('blur', saveNameChange);
+                nameInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        saveNameChange();
+                    }
+                });
+                
+                function saveNameChange() {
+                    const name = nameInput.value.trim();
+                    countdownObj.name = name;
+                    nameDisplay.textContent = name || "Click to name";
+                    card.replaceChild(nameDisplay, nameInput);
+                }
+            });
             card.appendChild(nameDisplay);
             
-            // Name input and Set Name button
-            const nameInput = document.createElement('input');
-            nameInput.type = 'text';
-            nameInput.placeholder = 'Countdown Name';
-            nameInput.id = `name-${id}`;
-            card.appendChild(nameInput);
-
-            const setNameBtn = document.createElement('button');
-            setNameBtn.textContent = 'Set Name';
-            setNameBtn.onclick = function(){
-                const name = nameInput.value.trim();
-                countdownObj.name = name;
-                nameDisplay.textContent = name;
-            };
-            card.appendChild(setNameBtn);
-
             // Display element for the remaining time
             const display = document.createElement('p');
             display.id = `time-${id}`;
             display.textContent = "0m 0s";
+            display.addEventListener('click', function() {
+                // Create container for inputs
+                const timeEditContainer = document.createElement('div');
+                
+                // Minutes input
+                const minutesInput = document.createElement('input');
+                minutesInput.type = 'number';
+                minutesInput.min = 0;
+                minutesInput.className = 'edit-input';
+                minutesInput.value = Math.floor(countdownObj.remaining / 60);
+                minutesInput.placeholder = 'Minutes';
+                timeEditContainer.appendChild(minutesInput);
+                
+                // Seconds input
+                const secondsInput = document.createElement('input');
+                secondsInput.type = 'number';
+                secondsInput.min = 0;
+                secondsInput.max = 59;
+                secondsInput.className = 'edit-input';
+                secondsInput.value = countdownObj.remaining % 60;
+                secondsInput.placeholder = 'Seconds';
+                timeEditContainer.appendChild(secondsInput);
+                
+                // Save button
+                const saveButton = document.createElement('button');
+                saveButton.textContent = 'Set';
+                saveButton.addEventListener('click', saveTimeChange);
+                timeEditContainer.appendChild(saveButton);
+                
+                // Replace display with inputs
+                card.replaceChild(timeEditContainer, display);
+                minutesInput.focus();
+                
+                // Add event listeners for Enter key
+                minutesInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        saveTimeChange();
+                    }
+                });
+                
+                secondsInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        saveTimeChange();
+                    }
+                });
+                
+                function saveTimeChange() {
+                    const minutes = parseInt(minutesInput.value) || 0;
+                    const seconds = parseInt(secondsInput.value) || 0;
+                    countdownObj.remaining = minutes * 60 + seconds;
+                    card.replaceChild(display, timeEditContainer);
+                    updateDisplay(id);
+                    saveCountdowns(); // Save changes to localStorage immediately
+                }
+            });
             card.appendChild(display);
-            
-            // Container for timer inputs (minutes and seconds)
-            const inputContainer = document.createElement('div');
-            inputContainer.className = 'inputs';
-            
-            // Minutes input
-            const minutesInput = document.createElement('input');
-            minutesInput.type = 'number';
-            minutesInput.min = 0;
-            minutesInput.placeholder = 'Minutes';
-            minutesInput.id = `min-${id}`;
-            inputContainer.appendChild(minutesInput);
-            
-            // Seconds input
-            const secondsInput = document.createElement('input');
-            secondsInput.type = 'number';
-            secondsInput.min = 0;
-            secondsInput.max = 59;
-            secondsInput.placeholder = 'Seconds';
-            secondsInput.id = `sec-${id}`;
-            inputContainer.appendChild(secondsInput);
-
-            card.appendChild(inputContainer);
-            
-            // Set Timer button
-            const setBtn = document.createElement('button');
-            setBtn.textContent = 'Set Timer';
-            setBtn.onclick = function(){
-                // Get values from inputs (default to 0 if blank)
-                const minutes = parseInt(minutesInput.value) || 0;
-                const seconds = parseInt(secondsInput.value) || 0;
-                const totalSeconds = minutes * 60 + seconds;
-                countdownObj.remaining = totalSeconds;
-                updateDisplay(id);
-            };
-            card.appendChild(setBtn);
             
             // Start button
             const startBtn = document.createElement('button');
@@ -249,16 +286,16 @@
             return { card, countdownObj };
         }
 
-        // Update the displayed time for a given countdown id
         function updateDisplay(id) {
             const obj = countdowns.find(c => c.countdownObj.id === id);
             if (obj) {
                 const display = document.getElementById(`time-${id}`);
                 const mins = Math.floor(obj.countdownObj.remaining / 60);
                 const secs = obj.countdownObj.remaining % 60;
-                display.textContent = `${mins}m ${secs}s`;
+                display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
         }
+
 
         // Add a new countdown card when the button is clicked
         document.getElementById('addCountdownBtn').addEventListener('click', function(){
