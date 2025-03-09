@@ -39,14 +39,14 @@
             text-align: center;
             margin: 10px 0;
             cursor: pointer; /* Show it's clickable */
-            margin-top: -50px;
+            /*margin-top: -50px;*/
         }
         
         .countdown h2 {
             cursor: pointer; /* Show it's clickable */
             font-size: 4em;
             text-align: center;
-            margin-top: 10px;
+            margin: 10px 0;
         }
         
         /* Apply Mukta Maalar Bold font to the entire page */
@@ -74,7 +74,6 @@
             width: calc(33% - 40px); /* 33% width to fit 3 cards */
             min-width: 300px;
             box-sizing: border-box;
-            justify-content: center;
         }
 
         .countdown button {
@@ -138,7 +137,8 @@
             name: c.countdownObj.name,
             remaining: c.countdownObj.remaining,
             initialTime: c.countdownObj.initialTime,
-            key: c.countdownObj.key
+            key: c.countdownObj.key,
+            nameHidden: c.countdownObj.nameHidden
             }));
             localStorage.setItem('countdowns', JSON.stringify(data));
         }
@@ -162,7 +162,7 @@
                 countdownObj.remaining = item.remaining;
                 countdownObj.initialTime = item.initialTime || item.remaining; // Load initial time or use remaining as fallback
                 countdownObj.key = item.key; // Load the key
-                countdownObj.key = item.key; // Load the key
+                countdownObj.nameHidden = item.nameHidden;
                 
                 // Update key button text if key exists
                 const keyBtn = card.querySelector(`.key-btn-${item.id}`);
@@ -174,7 +174,14 @@
                 document.getElementById('countdownsContainer').appendChild(card);
                 
                 // Update UI elements
-                card.querySelector('.countdown-name').textContent = item.name || "Click to name";
+                const nameElement = card.querySelector('.countdown-name');
+                nameElement.textContent = item.name || "Click to name";
+                
+                // Apply nameHidden state to the UI
+                if (item.nameHidden) {
+                    nameElement.style.display = 'none';
+                }
+                
                 card.querySelector(`#time-${item.id}`).textContent = 
                 `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
                 
@@ -334,7 +341,7 @@
         // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
             // Object to keep track of remaining time, interval, and name
-            const countdownObj = { id: id, remaining: 0, interval: null, name: "" };
+            const countdownObj = { id: id, remaining: 0, interval: null, name: "", nameHidden: false };
 
             // Container for a single countdown
             const card = document.createElement('div');
@@ -451,7 +458,7 @@
 
             // Start button
             const startBtn = document.createElement('button');
-            startBtn.textContent = 'Start';
+            startBtn.textContent = '▶️';
             startBtn.onclick = function(){
                 // Avoid starting if already running or if no time is set
                 if(countdownObj.interval || countdownObj.remaining <= 0) return;
@@ -470,7 +477,7 @@
 
             // Stop button
             const stopBtn = document.createElement('button');
-            stopBtn.textContent = 'Stop';
+            stopBtn.textContent = '⏸️';
             stopBtn.onclick = function(){
                 if(countdownObj.interval) {
                     clearInterval(countdownObj.interval);
@@ -539,6 +546,29 @@
 
             addKeyAssignmentButton(card, countdownObj); // Add key assignment button
 
+            // Hide/Show name button
+            const hideNameBtn = document.createElement('button');
+            hideNameBtn.textContent = countdownObj.nameHidden ? 'Show Name' : 'Hide Name';
+            hideNameBtn.onclick = function() {
+                const nameElement = card.querySelector('.countdown-name');
+                countdownObj.nameHidden = !countdownObj.nameHidden;
+                
+                if (countdownObj.nameHidden) {
+                    nameElement.style.display = 'none';
+                    hideNameBtn.textContent = 'Show Name';
+                } else {
+                    nameElement.style.display = '';
+                    hideNameBtn.textContent = 'Hide Name';
+                }
+                saveCountdowns();
+            };
+            card.appendChild(hideNameBtn);
+
+            // Apply initial name visibility state
+            if (countdownObj.nameHidden) {
+                card.querySelector('.countdown-name').style.display = 'none';
+            }
+
             // Add status indicator
             const statusIndicator = document.createElement('span');
             statusIndicator.id = `status-${id}`;
@@ -552,7 +582,7 @@
             
             // Set the name display after creating the object
             nameDisplay.textContent = countdownObj.name || "Click to name";
-            
+
             return { card, countdownObj };
         }
 
