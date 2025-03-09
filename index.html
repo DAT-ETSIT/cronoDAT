@@ -138,6 +138,7 @@
             remaining: c.countdownObj.remaining,
             initialTime: c.countdownObj.initialTime,
             key: c.countdownObj.key,
+            modifiers: c.countdownObj.modifiers,
             nameHidden: c.countdownObj.nameHidden
             }));
             localStorage.setItem('countdowns', JSON.stringify(data));
@@ -146,7 +147,6 @@
         function saveTitle(title) {
             localStorage.setItem('pageTitle', title);
         }
-        
         function loadCountdowns() {
             // Load page title
             const savedTitle = localStorage.getItem('pageTitle') || "Cronómetro múltiple";
@@ -162,12 +162,15 @@
                 countdownObj.remaining = item.remaining;
                 countdownObj.initialTime = item.initialTime || item.remaining; // Load initial time or use remaining as fallback
                 countdownObj.key = item.key; // Load the key
+                countdownObj.modifiers = item.modifiers; // Load the modifiers
                 countdownObj.nameHidden = item.nameHidden;
                 
                 // Update key button text if key exists
                 const keyBtn = card.querySelector(`.key-btn-${item.id}`);
                 if (keyBtn && item.key) {
-                keyBtn.textContent = `Key: ${item.key.toUpperCase()}`;
+                    // Format key with modifiers if they exist
+                    const formattedKey = formatKeyCombination(item.modifiers, item.key);
+                    keyBtn.textContent = `Key: ${formattedKey}`;
                 }
                 
                 // Append the card to the container so it is visible
@@ -263,23 +266,20 @@
             }
             });
         });
-       
-
-        // Add a key assignment button to each countdown card
-        function addKeyAssignmentButton(card, countdownObj) {
             // Helper function to format key combinations for display
             function formatKeyCombination(modifiers, key) {
-            if (!modifiers) return key.toUpperCase();
-            
-            let combo = '';
-            if (modifiers.ctrl) combo += 'Ctrl+';
-            if (modifiers.alt) combo += 'Alt+';
-            if (modifiers.shift) combo += 'Shift+';
-            
-            return combo + key.toUpperCase();
+                if (!modifiers) return key.toUpperCase();
+                
+                let combo = '';
+                if (modifiers.ctrl) combo += 'Ctrl+';
+                if (modifiers.alt) combo += 'Alt+';
+                if (modifiers.shift) combo += 'Shift+';
+                
+                return combo + key.toUpperCase();
             }
             
-            const keyBtn = document.createElement('button');
+            function addKeyAssignmentButton(card, countdownObj) {
+                const keyBtn = document.createElement('button');
             keyBtn.textContent = countdownObj.key ? 
             `Key: ${formatKeyCombination(countdownObj.modifiers, countdownObj.key)}` : 
             'Assign Key';
