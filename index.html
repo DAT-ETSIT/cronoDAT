@@ -285,25 +285,34 @@
             keyBtn.className = `key-btn-${countdownObj.id}`;
             
             keyBtn.addEventListener('click', function() {
-                keyBtn.textContent = 'Press any key...';
+            keyBtn.textContent = 'Press any key... (Del to remove)';
+            
+            // Create one-time event listener for the next keypress
+            const keyHandler = function(e) {
+                // Handle Delete key to remove assignment
+                if (e.key === 'Delete') {
+                countdownObj.key = null;
+                keyBtn.textContent = 'Assign Key';
+                document.removeEventListener('keydown', keyHandler);
+                saveCountdowns();
+                return;
+                }
                 
-                // Create one-time event listener for the next keypress
-                const keyHandler = function(e) {
-                    // Prevent assigning keys that might interfere with browser functions
-                    if (['Tab', 'Escape', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                        keyBtn.textContent = countdownObj.key ? `Key: ${countdownObj.key.toUpperCase()}` : 'Assign Key';
-                        document.removeEventListener('keydown', keyHandler);
-                        return;
-                    }
-                    
-                    // Assign the pressed key
-                    countdownObj.key = e.key;
-                    keyBtn.textContent = `Key: ${e.key.toUpperCase()}`;
-                    document.removeEventListener('keydown', keyHandler);
-                    saveCountdowns();
-                };
+                // Prevent assigning keys that might interfere with browser functions
+                if (['Tab', 'Escape', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Control', 'Alt', 'AltGraph', 'Shift'].includes(e.key)) {
+                keyBtn.textContent = countdownObj.key ? `Key: ${countdownObj.key.toUpperCase()}` : 'Assign Key';
+                document.removeEventListener('keydown', keyHandler);
+                return;
+                }
                 
-                document.addEventListener('keydown', keyHandler);
+                // Assign the pressed key
+                countdownObj.key = e.key;
+                keyBtn.textContent = `Key: ${e.key.toUpperCase()}`;
+                document.removeEventListener('keydown', keyHandler);
+                saveCountdowns();
+            };
+            
+            document.addEventListener('keydown', keyHandler);
             });
             
             card.appendChild(keyBtn);
