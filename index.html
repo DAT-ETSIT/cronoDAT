@@ -140,7 +140,8 @@
                     key: c.countdownObj.key,
                     modifiers: c.countdownObj.modifiers,
                     nameHidden: c.countdownObj.nameHidden,
-                    resetOnStop: c.countdownObj.resetOnStop
+                    resetOnStop: c.countdownObj.resetOnStop,
+                    textColor: c.countdownObj.textColor
                     }));
                     localStorage.setItem('countdowns', JSON.stringify(data));
                 }
@@ -166,6 +167,8 @@
                 countdownObj.key = item.key; // Load the key
                 countdownObj.modifiers = item.modifiers; // Load the modifiers
                 countdownObj.nameHidden = item.nameHidden;
+                countdownObj.resetOnStop = item.resetOnStop;
+                countdownObj.textColor = item.textColor || "#000"; // Load text color or use default
                 countdownObj.resetOnStop = item.resetOnStop;
                 if (countdownObj.updateResetButtonStyle) {
                     countdownObj.updateResetButtonStyle();
@@ -198,8 +201,10 @@
                     nameElement.style.display = 'none';
                 }
                 
-                card.querySelector(`#time-${item.id}`).textContent = 
+                const timeElement = card.querySelector(`#time-${item.id}`);
+                timeElement.textContent = 
                 `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
+                timeElement.style.color = item.textColor || "#000"; // Apply saved text color
                 
                 countdowns.push({ countdownObj });
             });
@@ -366,7 +371,7 @@
         // Create a new countdown card element along with its corresponding object
         function createCountdownCard(id) {
             // Object to keep track of remaining time, interval, and name
-            const countdownObj = { id: id, remaining: 0, interval: null, name: "", nameHidden: false };
+            const countdownObj = { id: id, remaining: 0, interval: null, name: "", nameHidden: false, textColor: "#000" };
 
             // Container for a single countdown
             const card = document.createElement('div');
@@ -417,6 +422,39 @@
             const display = document.createElement('p');
             display.id = `time-${id}`;
             display.textContent = "00:00";
+            
+            // Add custom color property to the countdown object and set a default
+            countdownObj.textColor = countdownObj.textColor || "#000";
+            display.style.color = countdownObj.textColor;
+            
+            // Add right-click handler to change text color
+            display.addEventListener('contextmenu', function(event) {
+                event.preventDefault(); // Prevent default context menu
+                
+                // Create color picker input
+                const colorPicker = document.createElement('input');
+                colorPicker.type = 'color';
+                colorPicker.value = countdownObj.textColor;
+                colorPicker.style.position = 'absolute';
+                colorPicker.style.left = (event.pageX) + 'px';
+                colorPicker.style.top = (event.pageY) + 'px';
+                
+                document.body.appendChild(colorPicker);
+                colorPicker.click(); // Open the color picker automatically
+                
+                colorPicker.addEventListener('change', function() {
+                    countdownObj.textColor = this.value;
+                    display.style.color = countdownObj.textColor;
+                    saveCountdowns(); // Save the color to localStorage
+                });
+                
+                // Remove the color picker when it loses focus
+                colorPicker.addEventListener('blur', function() {
+                    document.body.removeChild(colorPicker);
+                });
+            });
+
+
             display.addEventListener('click', function() {
                 // Create container for inputs
                 const timeEditContainer = document.createElement('div');
@@ -610,13 +648,15 @@
         }
 
         function updateDisplay(id) {
+            // Find the countdown object with the matching id
             const obj = countdowns.find(c => c.countdownObj.id === id);
-            if (obj) {
-                const display = document.getElementById(`time-${id}`);
-                const mins = Math.floor(obj.countdownObj.remaining / 60);
-                const secs = obj.countdownObj.remaining % 60;
-                display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
+            if (!obj) return;
+            
+            const display = document.getElementById(`time-${id}`);
+            const mins = Math.floor(obj.countdownObj.remaining / 60);
+            const secs = obj.countdownObj.remaining % 60;
+            display.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            display.style.color = obj.countdownObj.textColor || "#000"; // Apply the saved text color
         }
 
         // Add a new countdown card when the button is clicked
