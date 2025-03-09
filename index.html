@@ -136,7 +136,8 @@
             const data = countdowns.map(c => ({
             id: c.countdownObj.id,
             name: c.countdownObj.name,
-            remaining: c.countdownObj.remaining
+            remaining: c.countdownObj.remaining,
+            key: c.countdownObj.key
             }));
             localStorage.setItem('countdowns', JSON.stringify(data));
         }
@@ -158,13 +159,21 @@
                 const { card, countdownObj } = createCountdownCard(item.id);
                 countdownObj.name = item.name;
                 countdownObj.remaining = item.remaining;
+                countdownObj.key = item.key; // Load the key
+                
+                // Update key button text if key exists
+                const keyBtn = card.querySelector(`.key-btn-${item.id}`);
+                if (keyBtn && item.key) {
+                keyBtn.textContent = `Key: ${item.key.toUpperCase()}`;
+                }
                 
                 // Append the card to the container so it is visible
                 document.getElementById('countdownsContainer').appendChild(card);
                 
-                // Update UI elements accordingly using the card element
+                // Update UI elements
                 card.querySelector('.countdown-name').textContent = item.name || "Click to name";
-                card.querySelector(`#time-${item.id}`).textContent = `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
+                card.querySelector(`#time-${item.id}`).textContent = 
+                `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
                 
                 countdowns.push({ countdownObj });
             });
@@ -234,51 +243,8 @@
             }
             });
         });
+       
 
-        // Update save function to include the key
-        function saveCountdowns() {
-            const data = countdowns.map(c => ({
-            id: c.countdownObj.id,
-            name: c.countdownObj.name,
-            remaining: c.countdownObj.remaining,
-            key: c.countdownObj.key
-            }));
-            localStorage.setItem('countdowns', JSON.stringify(data));
-        }
-
-        function loadCountdowns() {
-            // Load page title
-            const savedTitle = localStorage.getItem('pageTitle') || "Cronómetro múltiple";
-            document.title = savedTitle;
-            const h1Element = document.querySelector('h1');
-            h1Element.textContent = savedTitle;
-            
-            const data = JSON.parse(localStorage.getItem('countdowns'));
-            if (data && Array.isArray(data)) {
-            data.forEach(item => {
-                const { card, countdownObj } = createCountdownCard(item.id);
-                countdownObj.name = item.name;
-                countdownObj.remaining = item.remaining;
-                countdownObj.key = item.key; // Load the key
-                
-                // Update key button text if key exists
-                const keyBtn = card.querySelector(`.key-btn-${item.id}`);
-                if (keyBtn && item.key) {
-                keyBtn.textContent = `Key: ${item.key.toUpperCase()}`;
-                }
-                
-                // Append the card to the container so it is visible
-                document.getElementById('countdownsContainer').appendChild(card);
-                
-                // Update UI elements
-                card.querySelector('.countdown-name').textContent = item.name || "Click to name";
-                card.querySelector(`#time-${item.id}`).textContent = 
-                `${Math.floor(item.remaining / 60).toString().padStart(2, '0')}:${(item.remaining % 60).toString().padStart(2, '0')}`;
-                
-                countdowns.push({ countdownObj });
-            });
-            }
-        }
         // Add a key assignment button to each countdown card
         function addKeyAssignmentButton(card, countdownObj) {
             const keyBtn = document.createElement('button');
