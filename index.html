@@ -167,6 +167,9 @@
                 countdownObj.modifiers = item.modifiers; // Load the modifiers
                 countdownObj.nameHidden = item.nameHidden;
                 countdownObj.resetOnStop = item.resetOnStop;
+                if (countdownObj.updateResetButtonStyle) {
+                    countdownObj.updateResetButtonStyle();
+                }
                 
                 // Update the checkbox if it exists
                 const checkbox = card.querySelector(`#resetOnStop-${item.id}`);
@@ -535,24 +538,44 @@
                 }
             };
 
-            // Add "Reset on stop" checkbox
-            const resetOnStopContainer = document.createElement('span');
-            resetOnStopContainer.style.margin = '2px';
-
-            const resetOnStopCheckbox = document.createElement('input');
-            resetOnStopCheckbox.type = 'checkbox';
-            resetOnStopCheckbox.id = `resetOnStop-${id}`;
-            resetOnStopCheckbox.checked = countdownObj.resetOnStop || false;
-
-
-            resetOnStopCheckbox.addEventListener('change', function() {
-                countdownObj.resetOnStop = this.checked;
-                saveCountdowns(); // Save the setting to localStorage
+            // Set up reset on stop functionality (right-click on reset button)
+            countdownObj.resetOnStop = countdownObj.resetOnStop || false;
+            
+            // Reset button creation and styling
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = 'Reset';
+            function updateResetButtonStyle() {
+                if (countdownObj.resetOnStop) {
+                    resetBtn.style.backgroundColor = '#F65555';
+                    resetBtn.style.textDecoration = 'underline';
+                } else {
+                    resetBtn.style.backgroundColor = '#FCCF31';
+                    resetBtn.style.textDecoration = 'none';
+                }
+            }
+            // Expose updateResetButtonStyle so it can be called when loading saved state and initialize style
+            countdownObj.updateResetButtonStyle = updateResetButtonStyle;
+            updateResetButtonStyle();
+            
+            // Add right-click handler to toggle reset on stop
+            resetBtn.addEventListener('contextmenu', function(event) {
+                event.preventDefault(); // Prevent default context menu
+                countdownObj.resetOnStop = !countdownObj.resetOnStop;
+                updateResetButtonStyle();
+                saveCountdowns();
             });
-
-            resetOnStopContainer.appendChild(resetOnStopCheckbox);
-            card.appendChild(resetOnStopContainer);
-
+            
+            resetBtn.onclick = function(){
+                clearInterval(countdownObj.interval);
+                countdownObj.interval = null;
+                // Reset to the last manually entered value (if exists) or 0
+                countdownObj.remaining = countdownObj.initialTime || 0;
+                updateDisplay(id);
+                document.getElementById(`status-${id}`).innerHTML = '⏸️';
+                saveCountdowns();
+            };
+            card.appendChild(resetBtn);
+            
             // Update stop button to include reset functionality
             stopBtn.onclick = function(){
                 if(countdownObj.interval) {
@@ -569,20 +592,6 @@
                     saveCountdowns();
                 }
             };
-
-            // Reset button
-            const resetBtn = document.createElement('button');
-            resetBtn.textContent = 'Reset';
-            resetBtn.onclick = function(){
-                clearInterval(countdownObj.interval);
-                countdownObj.interval = null;
-                // Reset to the last manually entered value (if exists) or 0
-                countdownObj.remaining = countdownObj.initialTime || 0;
-                updateDisplay(id);
-                document.getElementById(`status-${id}`).innerHTML = '⏸️';
-                saveCountdowns();
-            };
-            card.appendChild(resetBtn);
             
             // Delete button
             const deleteBtn = document.createElement('button');
