@@ -423,16 +423,6 @@
             });
             displayWrapper.appendChild(display);
 
-            // Add status indicator
-            const statusIndicator = document.createElement('span');
-            statusIndicator.id = `status-${id}`;
-            statusIndicator.className = 'timer-status';
-            statusIndicator.innerHTML = '⏸️'; // Pause symbol for stopped timer
-            statusIndicator.style.fontSize = '24px';
-            statusIndicator.style.margin = '0 10px';
-            statusIndicator.style.verticalAlign = 'middle';
-            displayWrapper.appendChild(statusIndicator);
-
             card.appendChild(displayWrapper);
 
             // Start button
@@ -465,8 +455,6 @@
             };
             card.appendChild(stopBtn);
 
-            
-
             // Update start button to change status indicator
             startBtn.onclick = function(){
                 // Avoid starting if already running or if no time is set
@@ -479,10 +467,10 @@
                         clearInterval(countdownObj.interval);
                         countdownObj.interval = null;
                         updateDisplay(id);
-                        statusIndicator.innerHTML = '⏸️'; // Update to pause icon when timer completes
+                        document.getElementById(`status-${id}`).innerHTML = '⏸️'; // Update to pause icon when timer completes
                     }
                 }, 1000);
-                statusIndicator.innerHTML = '▶️'; // Update to play icon when timer starts
+                document.getElementById(`status-${id}`).innerHTML = '▶️'; // Update to play icon when timer starts
             };
 
             // Update stop button to change status indicator
@@ -490,7 +478,7 @@
                 if(countdownObj.interval) {
                     clearInterval(countdownObj.interval);
                     countdownObj.interval = null;
-                    statusIndicator.innerHTML = '⏸️'; // Update to pause icon when timer stops
+                    document.getElementById(`status-${id}`).innerHTML = '⏸️'; // Update to pause icon when timer stops
                 }
             };
 
@@ -518,6 +506,17 @@
             card.appendChild(deleteBtn);
 
             addKeyAssignmentButton(card, countdownObj); // Add key assignment button
+
+            // Add status indicator
+            const statusIndicator = document.createElement('span');
+            statusIndicator.id = `status-${id}`;
+            statusIndicator.className = 'timer-status';
+            statusIndicator.innerHTML = '⏸️'; // Pause symbol for stopped timer
+            statusIndicator.style.fontSize = '24px';
+            statusIndicator.style.margin = '0 10px';
+            statusIndicator.style.verticalAlign = 'middle';
+
+            card.appendChild(statusIndicator); // Append status indicator at the end of the card
             
             // Set the name display after creating the object
             nameDisplay.textContent = countdownObj.name || "Click to name";
