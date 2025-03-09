@@ -137,6 +137,7 @@
             id: c.countdownObj.id,
             name: c.countdownObj.name,
             remaining: c.countdownObj.remaining,
+            initialTime: c.countdownObj.initialTime,
             key: c.countdownObj.key
             }));
             localStorage.setItem('countdowns', JSON.stringify(data));
@@ -155,10 +156,12 @@
             
             const data = JSON.parse(localStorage.getItem('countdowns'));
             if (data && Array.isArray(data)) {
-            data.forEach(item => {
+                data.forEach(item => {
                 const { card, countdownObj } = createCountdownCard(item.id);
                 countdownObj.name = item.name;
                 countdownObj.remaining = item.remaining;
+                countdownObj.initialTime = item.initialTime || item.remaining; // Load initial time or use remaining as fallback
+                countdownObj.key = item.key; // Load the key
                 countdownObj.key = item.key; // Load the key
                 
                 // Update key button text if key exists
@@ -393,6 +396,7 @@
                     const minutes = parseInt(minutesInput.value) || 0;
                     const seconds = parseInt(secondsInput.value) || 0;
                     countdownObj.remaining = minutes * 60 + seconds;
+                    countdownObj.initialTime = countdownObj.remaining; // Store the manually entered time
                     displayWrapper.replaceChild(display, timeEditContainer);
                     updateDisplay(id);
                     saveCountdowns(); // Save changes to localStorage immediately
@@ -465,8 +469,11 @@
             resetBtn.onclick = function(){
                 clearInterval(countdownObj.interval);
                 countdownObj.interval = null;
-                countdownObj.remaining = 0;
+                // Reset to the last manually entered value (if exists) or 0
+                countdownObj.remaining = countdownObj.initialTime || 0;
                 updateDisplay(id);
+                document.getElementById(`status-${id}`).innerHTML = '⏸️';
+                saveCountdowns();
             };
             card.appendChild(resetBtn);
             
