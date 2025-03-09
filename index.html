@@ -132,21 +132,23 @@
     <script>
         // Will hold all countdown objects and persist them in local storage
         function saveCountdowns() {
-            const data = countdowns.map(c => ({
-            id: c.countdownObj.id,
-            name: c.countdownObj.name,
-            remaining: c.countdownObj.remaining,
-            initialTime: c.countdownObj.initialTime,
-            key: c.countdownObj.key,
-            modifiers: c.countdownObj.modifiers,
-            nameHidden: c.countdownObj.nameHidden
-            }));
-            localStorage.setItem('countdowns', JSON.stringify(data));
-        }
+                    const data = countdowns.map(c => ({
+                    id: c.countdownObj.id,
+                    name: c.countdownObj.name,
+                    remaining: c.countdownObj.remaining,
+                    initialTime: c.countdownObj.initialTime,
+                    key: c.countdownObj.key,
+                    modifiers: c.countdownObj.modifiers,
+                    nameHidden: c.countdownObj.nameHidden,
+                    resetOnStop: c.countdownObj.resetOnStop
+                    }));
+                    localStorage.setItem('countdowns', JSON.stringify(data));
+                }
         
         function saveTitle(title) {
             localStorage.setItem('pageTitle', title);
         }
+
         function loadCountdowns() {
             // Load page title
             const savedTitle = localStorage.getItem('pageTitle') || "Cronómetro múltiple";
@@ -163,6 +165,14 @@
                 countdownObj.initialTime = item.initialTime || item.remaining; // Load initial time or use remaining as fallback
                 countdownObj.key = item.key; // Load the key
                 countdownObj.modifiers = item.modifiers; // Load the modifiers
+                countdownObj.nameHidden = item.nameHidden;
+                countdownObj.resetOnStop = item.resetOnStop;
+                
+                // Update the checkbox if it exists
+                const checkbox = card.querySelector(`#resetOnStop-${item.id}`);
+                if (checkbox) {
+                    checkbox.checked = item.resetOnStop || false;
+                }
                 countdownObj.nameHidden = item.nameHidden;
                 
                 // Update key button text if key exists
@@ -244,10 +254,16 @@
                 }
                 
                 if (c.countdownObj.interval) {
-                // Stop the timer if running
-                clearInterval(c.countdownObj.interval);
-                c.countdownObj.interval = null;
-                document.getElementById(`status-${c.countdownObj.id}`).textContent = '⏸️';
+                    // Stop the timer if running
+                    clearInterval(c.countdownObj.interval);
+                    c.countdownObj.interval = null;
+                    document.getElementById(`status-${c.countdownObj.id}`).textContent = '⏸️';
+                    
+                    // Reset the timer if the reset on stop option is enabled
+                    if(c.countdownObj.resetOnStop) {
+                        c.countdownObj.remaining = c.countdownObj.initialTime || 0;
+                        updateDisplay(c.countdownObj.id);
+                    }
                 } else if (c.countdownObj.remaining > 0) {
                 // Start the timer if not running
                 c.countdownObj.interval = setInterval(function() {
@@ -332,13 +348,13 @@
                 countdownObj.modifiers = null;
                 }
                 
-                // Update button text to show combination
-                keyBtn.textContent = `Key: ${formatKeyCombination(countdownObj.modifiers, e.key)}`;
-                document.removeEventListener('keydown', keyHandler);
-                saveCountdowns();
-            };
-            
-            document.addEventListener('keydown', keyHandler);
+                    // Update button text to show combination
+                    keyBtn.textContent = `Key: ${formatKeyCombination(countdownObj.modifiers, e.key)}`;
+                    document.removeEventListener('keydown', keyHandler);
+                    saveCountdowns();
+                };
+                
+                document.addEventListener('keydown', keyHandler);
             });
             
             card.appendChild(keyBtn);
@@ -516,6 +532,41 @@
                     clearInterval(countdownObj.interval);
                     countdownObj.interval = null;
                     document.getElementById(`status-${id}`).innerHTML = '⏸️'; // Update to pause icon when timer stops
+                }
+            };
+
+            // Add "Reset on stop" checkbox
+            const resetOnStopContainer = document.createElement('span');
+            resetOnStopContainer.style.margin = '2px';
+
+            const resetOnStopCheckbox = document.createElement('input');
+            resetOnStopCheckbox.type = 'checkbox';
+            resetOnStopCheckbox.id = `resetOnStop-${id}`;
+            resetOnStopCheckbox.checked = countdownObj.resetOnStop || false;
+
+
+            resetOnStopCheckbox.addEventListener('change', function() {
+                countdownObj.resetOnStop = this.checked;
+                saveCountdowns(); // Save the setting to localStorage
+            });
+
+            resetOnStopContainer.appendChild(resetOnStopCheckbox);
+            card.appendChild(resetOnStopContainer);
+
+            // Update stop button to include reset functionality
+            stopBtn.onclick = function(){
+                if(countdownObj.interval) {
+                    clearInterval(countdownObj.interval);
+                    countdownObj.interval = null;
+                    document.getElementById(`status-${id}`).innerHTML = '⏸️';
+                    
+                    // Reset the timer if the reset on stop option is enabled
+                    if(countdownObj.resetOnStop) {
+                        countdownObj.remaining = countdownObj.initialTime || 0;
+                        updateDisplay(id);
+                    }
+                    
+                    saveCountdowns();
                 }
             };
 
