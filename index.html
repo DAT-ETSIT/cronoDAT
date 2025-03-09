@@ -269,70 +269,76 @@
         function addKeyAssignmentButton(card, countdownObj) {
             // Helper function to format key combinations for display
             function formatKeyCombination(modifiers, key) {
-                if (!modifiers) return key.toUpperCase();
-                
-                let combo = '';
-                if (modifiers.ctrl) combo += 'Ctrl+';
-                if (modifiers.alt) combo += 'Alt+';
-                if (modifiers.shift) combo += 'Shift+';
-                
-                return combo + key.toUpperCase();
+            if (!modifiers) return key.toUpperCase();
+            
+            let combo = '';
+            if (modifiers.ctrl) combo += 'Ctrl+';
+            if (modifiers.alt) combo += 'Alt+';
+            if (modifiers.shift) combo += 'Shift+';
+            
+            return combo + key.toUpperCase();
             }
             
             const keyBtn = document.createElement('button');
             keyBtn.textContent = countdownObj.key ? 
-                `Key: ${formatKeyCombination(countdownObj.modifiers, countdownObj.key)}` : 
-                'Assign Key';
+            `Key: ${formatKeyCombination(countdownObj.modifiers, countdownObj.key)}` : 
+            'Assign Key';
             keyBtn.className = `key-btn-${countdownObj.id}`;
             
             keyBtn.addEventListener('click', function() {
-                keyBtn.textContent = 'Press any key... (Del to remove)';
+            keyBtn.textContent = 'Press any key... (Del to remove)';
+            
+            // Create one-time event listener for the next keypress
+            const keyHandler = function(e) {
+                // Handle Delete key to remove assignment
+                if (e.key === 'Delete') {
+                countdownObj.key = null;
+                countdownObj.modifiers = null;
+                keyBtn.textContent = 'Assign Key';
+                document.removeEventListener('keydown', keyHandler);
+                saveCountdowns();
+                return;
+                }
                 
-                // Create one-time event listener for the next keypress
-                const keyHandler = function(e) {
-                    // Handle Delete key to remove assignment
-                    if (e.key === 'Delete') {
-                        countdownObj.key = null;
-                        countdownObj.modifiers = null;
-                        keyBtn.textContent = 'Assign Key';
-                        document.removeEventListener('keydown', keyHandler);
-                        saveCountdowns();
-                        return;
-                    }
-                    
-                    // Prevent assigning certain keys that might interfere with browser functions
-                    if (['Tab', 'Escape', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
-                        keyBtn.textContent = countdownObj.key ? 
-                            `Key: ${formatKeyCombination(countdownObj.modifiers, countdownObj.key)}` : 
-                            'Assign Key';
-                        document.removeEventListener('keydown', keyHandler);
-                        return;
-                    }
-                    
-                    // Skip if only modifier keys were pressed
-                    if (['Control', 'Alt', 'Shift', 'AltGraph'].includes(e.key)) {
-                        return;
-                    }
-                    
-                    // Capture modifier keys
-                    const modifiers = {
-                        ctrl: e.ctrlKey,
-                        alt: e.altKey,
-                        altgr: e.getModifierState('AltGraph') || false,
-                        shift: e.shiftKey
-                    };
-                    
-                    // Store both key and modifiers
-                    countdownObj.key = e.key;
-                    countdownObj.modifiers = modifiers;
-                    
-                    // Update button text to show combination
-                    keyBtn.textContent = `Key: ${formatKeyCombination(modifiers, e.key)}`;
-                    document.removeEventListener('keydown', keyHandler);
-                    saveCountdowns();
+                // Prevent assigning certain keys that might interfere with browser functions
+                if (['Tab', 'Escape', 'Enter', 'Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                keyBtn.textContent = countdownObj.key ? 
+                    `Key: ${formatKeyCombination(countdownObj.modifiers, countdownObj.key)}` : 
+                    'Assign Key';
+                document.removeEventListener('keydown', keyHandler);
+                return;
+                }
+                
+                // Skip if only modifier keys were pressed
+                if (['Control', 'Alt', 'Shift', 'AltGraph'].includes(e.key)) {
+                return;
+                }
+                
+                // Check if any modifiers are pressed
+                const hasModifiers = e.ctrlKey || e.altKey || e.getModifierState('AltGraph') || e.shiftKey;
+                
+                if (hasModifiers) {
+                // Store both key and modifiers
+                countdownObj.key = e.key;
+                countdownObj.modifiers = {
+                    ctrl: e.ctrlKey,
+                    alt: e.altKey,
+                    altgr: e.getModifierState('AltGraph') || false,
+                    shift: e.shiftKey
                 };
+                } else {
+                // Store only key without modifiers
+                countdownObj.key = e.key;
+                countdownObj.modifiers = null;
+                }
                 
-                document.addEventListener('keydown', keyHandler);
+                // Update button text to show combination
+                keyBtn.textContent = `Key: ${formatKeyCombination(countdownObj.modifiers, e.key)}`;
+                document.removeEventListener('keydown', keyHandler);
+                saveCountdowns();
+            };
+            
+            document.addEventListener('keydown', keyHandler);
             });
             
             card.appendChild(keyBtn);
